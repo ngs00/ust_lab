@@ -60,7 +60,7 @@ def load_elem_attrs(path_elem_attr=None):
         return torch.vstack(elem_attrs)[:len(atom_nums), :]
 
 
-def get_form_fvec(form, elem_attrs):
+def get_form_vec(form, elem_attrs):
     elem_dict = parse_formula(form)
     wt_sum_feats = torch.zeros(elem_attrs.shape[1])
     list_atom_feats = list()
