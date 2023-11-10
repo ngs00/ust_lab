@@ -2,7 +2,7 @@ import pandas
 import numpy
 import itertools
 from tqdm import tqdm
-from util.chem import get_form_vec
+from ust_lab.util.chem import get_form_vec
 
 
 def load_form_vec_dataset(path_dataset, elem_attrs, idx_form, idx_target):
