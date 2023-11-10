@@ -60,7 +60,7 @@ def load_elem_attrs(path_elem_attr=None):
         return torch.vstack(elem_attrs)[:len(atom_nums), :]
 
 
-def get_fvec(form, elem_attrs):
+def get_form_fvec(form, elem_attrs):
     elem_dict = parse_formula(form)
     wt_sum_feats = torch.zeros(elem_attrs.shape[1])
     list_atom_feats = list()
@@ -152,31 +152,3 @@ def get_bond_info(atom_coord, rbf_means, atomic_cutoff):
 
 def rbf(data, mu, beta):
     return numpy.exp(-(data - mu)**2 / beta**2)
-
-
-def get_unique_systems(dataset, idx_form, idx_target):
-    systems = dict()
-
-    for d in dataset:
-        if d[idx_form] in systems.keys():
-            systems[d[idx_form]]['y'].append(d[idx_target])
-        else:
-            systems[d[idx_form]] = dict()
-            systems[d[idx_form]]['y'] = [d[idx_target]]
-
-    return systems
-
-
-def get_integer_form(form):
-    form_dict = parse_formula(form)
-    gcd = math.gcd(*[int(form_dict[e] * 1000) for e in form_dict])
-    form = ''
-
-    for e in form_dict:
-        r = int(int(form_dict[e] * 1000) / gcd)
-        if r == 1:
-            form += e
-        else:
-            form += e + str(r)
-
-    return form
