@@ -1,7 +1,9 @@
 import pandas
 import numpy
 import itertools
+import torch
 from tqdm import tqdm
+from torch.utils.data import TensorDataset
 from ust_lab.util.chem import get_form_vec
 
 
@@ -36,3 +38,10 @@ def get_k_folds(dataset, n_folds, random_seed=None):
         k_folds.append([dataset_train, dataset_test])
 
     return k_folds
+
+
+def get_tensor_dataset(dataset):
+    x = torch.tensor(dataset[:, :-1], dtype=torch.float)
+    y = torch.tensor(dataset[:, -1], dtype=torch.float).view(-1, 1)
+
+    return TensorDataset(x, y)
