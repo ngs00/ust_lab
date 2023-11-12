@@ -3,7 +3,7 @@ import numpy
 import itertools
 import torch
 from tqdm import tqdm
-from torch.utils.data import TensorDataset
+from torch.utils.data import TensorDataset, DataLoader
 from rdkit import Chem
 from ust_lab.util.chem import get_form_vec, get_mol_graph
 
@@ -60,3 +60,10 @@ def get_tensor_dataset(dataset):
     y = torch.tensor(dataset[:, -1], dtype=torch.float).view(-1, 1)
 
     return TensorDataset(x, y)
+
+
+def get_tensor_dataset_loader(dataset, batch_size=128, shuffle=False):
+    dataset_x = torch.tensor(dataset[:, :-1], dtype=torch.float)
+    dataset_y = torch.tensor(dataset[:, -1], dtype=torch.float).view(-1, 1)
+    
+    return DataLoader(TensorDataset(dataset_x, dataset_y), batch_size=batch_size, shuffle=shuffle)
