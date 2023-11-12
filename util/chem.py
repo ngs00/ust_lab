@@ -1,12 +1,12 @@
 import numpy
 import torch
 import json
-import math
 from mendeleev.fetch import fetch_table
 from sklearn.preprocessing import scale
 from sklearn.metrics import pairwise_distances
 from chemparse import parse_formula
 from torch_geometric.data import Data
+from rdkit import Chem
 
 
 atom_nums = {
@@ -43,6 +43,23 @@ first_ion_energies = [
     568, 584, 597, 585, 578, 581, 601, 608, 619, 627,
     635, 642, 478.57, 490, 640, 730, 660, 750, 840
 ]
+cat_bond_types = [
+    'UNSPECIFIED', 'SINGLE', 'DOUBLE', 'TRIPLE', 'QUADRUPLE',
+    'QUINTUPLE', 'HEXTUPLE', 'ONEANDAHALF', 'TWOANDAHALF', 'THREEANDAHALF',
+    'FOURANDAHALF', 'FIVEANDAHALF', 'AROMATIC', 'IONIC', 'HYDROGEN',
+    'THREECENTER', 'DATIVEONE', 'DATIVE', 'DATIVEL', 'DATIVER', 'OTHER', 'ZERO'
+]
+
+
+def get_one_hot_feat(hot_category, categories):
+    one_hot_feat = dict()
+    for cat in categories:
+        one_hot_feat[cat] = 0
+
+    if hot_category in categories:
+        one_hot_feat[hot_category] = 1
+
+    return numpy.array(list(one_hot_feat.values()))
 
 
 def load_elem_attrs(path_elem_attr=None):
@@ -77,6 +94,44 @@ def get_form_vec(form, elem_attrs):
                              torch.max(form_atom_feats, dim=0)[0]])
 
     return form_vec
+
+
+def get_mol_graph(mol, elem_attrs, y, add_h=False):
+    try:
+        atom_feats = list()
+        bonds = list()
+        bond_feats = list()
+
+        if add_h:
+            mol = Chem.AddHs(mol)
+
+        if mol is None:
+            return None
+
+        for atom in mol.GetAtoms():
+            elem_attr = elem_attrs[atom.GetAtomicNum() - 1, :]
+            mem_aromatic = 1 if atom.GetIsAromatic() else 0
+            degree = atom.GetDegree()
+            n_hs = atom.GetTotalNumHs()
+            atom_feats.append(numpy.hstack([elem_attr, mem_aromatic, degree, n_hs]))
+
+        for bond in mol.GetBonds():
+            bonds.append([bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()])
+            bond_feats.append(get_one_hot_feat(str(bond.GetBondType()), cat_bond_types))
+            bonds.append([bond.GetEndAtomIdx(), bond.GetBeginAtomIdx()])
+            bond_feats.append(get_one_hot_feat(str(bond.GetBondType()), cat_bond_types))
+
+        if len(bonds) == 0:
+            return None
+
+        atom_feats = torch.tensor(numpy.vstack(atom_feats), dtype=torch.float)
+        bonds = torch.tensor(bonds, dtype=torch.long).t().contiguous()
+        bond_feats = torch.tensor(numpy.vstack(bond_feats), dtype=torch.float)
+        y = torch.tensor(y, dtype=torch.float).view(1, 1)
+
+        return Data(x=atom_feats, edge_index=bonds, edge_attr=bond_feats, y=y)
+    except RuntimeError:
+        return None
 
 
 def get_crystal_graph(struct, elem_attrs, rbf_means, fvec, form_eng, target, atomic_cutoff=4.0):
