@@ -4,7 +4,8 @@ import itertools
 import torch
 from tqdm import tqdm
 from torch.utils.data import TensorDataset
-from ust_lab.util.chem import get_form_vec
+from rdkit import Chem
+from ust_lab.util.chem import get_form_vec, get_mol_graph
 
 
 def load_form_vec_dataset(path_dataset, elem_attrs, idx_form, idx_target):
@@ -16,6 +17,20 @@ def load_form_vec_dataset(path_dataset, elem_attrs, idx_form, idx_target):
         dataset.append(numpy.hstack([form_vec, data[i][idx_target]]))
 
     return numpy.vstack(dataset)
+
+
+def load_mol_dataset(path_dataset, elem_attrs, idx_smiles, idx_target):
+    data = pandas.read_excel(path_dataset).values.tolist()
+    dataset = list()
+
+    for i in tqdm(range(0, len(data))):
+        mol = Chem.MolFromSmiles(data[i][idx_smiles])
+        mol_graph = get_mol_graph(mol, elem_attrs, data[i][idx_target])
+
+        if mol_graph is not None:
+            dataset.append(mol_graph)
+
+    return dataset
 
 
 def get_k_folds(dataset, n_folds, random_seed=None):
