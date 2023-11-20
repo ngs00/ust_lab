@@ -134,7 +134,7 @@ def get_mol_graph(mol, elem_attrs, y, add_h=False):
         return None
 
 
-def get_crystal_graph(struct, elem_attrs, rbf_means, fvec, form_eng, target, atomic_cutoff=4.0):
+def get_crystal_graph(struct, elem_attrs, rbf_means, target, atomic_cutoff=4.0):
     try:
         atom_coord, atom_feats, ans = get_atom_info(struct, elem_attrs, atomic_cutoff)
         bonds, bond_feats = get_bond_info(atom_coord, rbf_means, atomic_cutoff)
@@ -145,8 +145,6 @@ def get_crystal_graph(struct, elem_attrs, rbf_means, fvec, form_eng, target, ato
         crystal_graph = Data(x=torch.tensor(atom_feats, dtype=torch.float),
                              edge_index=torch.tensor(bonds, dtype=torch.long).t().contiguous(),
                              edge_attr=torch.tensor(bond_feats, dtype=torch.float),
-                             fvec=fvec,
-                             form_eng=torch.tensor(form_eng, dtype=torch.float).view(1, 1),
                              y=torch.tensor(target, dtype=torch.float).view(1, 1))
 
         return crystal_graph
