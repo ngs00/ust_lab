@@ -5,7 +5,8 @@ import torch
 from tqdm import tqdm
 from torch.utils.data import TensorDataset, DataLoader
 from rdkit import Chem
-from ust_lab.util.chem import get_form_vec, get_mol_graph
+from pymatgen.core import Structure
+from ust_lab.util.chem import get_form_vec, get_mol_graph, get_crystal_graph
 
 
 def load_form_vec_dataset(path_dataset, elem_attrs, idx_form, idx_target):
@@ -32,6 +33,21 @@ def load_mol_dataset(path_dataset, elem_attrs, idx_smiles, idx_target):
 
     return dataset
 
+
+def load_mat_dataset(path_metadata, path_structs, elem_attrs, idx_mat_id, idx_target, atomic_cutoff=4.0):
+    metadata = pandas.read_excel(path_metadata).values.tolist()
+    rbf_means = numpy.linspace(start=1.0, stop=atomic_cutoff, num=64)
+    dataset = list()
+
+    for i in tqdm(range(0, len(metadata))):
+        mat = Structure.from_file('{}/{}.cif'.format(path_structs, metadata[i][idx_mat_id]))
+        crystal_graph = get_crystal_graph(mat, elem_attrs, rbf_means, metadata[i][idx_target], atomic_cutoff)
+
+        if crystal_graph is not None:
+          dataset.append(crystal_graph)
+    
+    return dataset
+    
 
 def get_k_folds(dataset, n_folds, random_seed=None):
     if random_seed is not None:
