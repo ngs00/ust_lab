@@ -113,7 +113,7 @@ class CGCNN(torch.nn.Module):
         self.gc1 = CGConv(128, dim_edge_feat, batch_norm=True)
         self.gc2 = CGConv(128, dim_edge_feat, batch_norm=True)
         self.enfc = torch.nn.Linear(128, 32)
-        self.fc1 = torch.nn.Linear(32, dim_out
+        self.fc1 = torch.nn.Linear(32, dim_out)
 
         self.nfc.reset_parameters()
         self.enfc.reset_parameters()
