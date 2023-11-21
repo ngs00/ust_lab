@@ -1,5 +1,5 @@
 import torch
-from torch.nn.functional import leaky_relu
+from torch.nn.functional import leaky_relu, normalize
 from torch_geometric.nn.conv import *
 from torch_geometric.nn.glob import *
 
