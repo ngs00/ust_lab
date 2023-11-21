@@ -106,6 +106,30 @@ class MPNN(torch.nn.Module):
         return out
 
 
+class CGCNN(torch.nn.Module):
+    def __init__(self, dim_node_feat, dim_edge_feat, dim_out):
+        super(CGCNN, self).__init__()
+        self.nfc = torch.nn.Linear(dim_node_feat, 128)
+        self.gc1 = CGConv(128, dim_edge_feat, batch_norm=True)
+        self.gc2 = CGConv(128, dim_edge_feat, batch_norm=True)
+        self.enfc = torch.nn.Linear(128, 32)
+        self.fc1 = torch.nn.Linear(32, dim_out
+
+        self.nfc.reset_parameters()
+        self.enfc.reset_parameters()
+        self.fc1.reset_parameters()
+
+    def forward(self, g):
+        hx = leaky_relu(self.nfc(g.x))
+        hx = leaky_relu(self.gc1(hx, g.edge_index, g.edge_attr))
+        hx = leaky_relu(self.gc2(hx, g.edge_index, g.edge_attr))
+        z = normalize(global_mean_pool(hx, g.batch), p=2, dim=1)
+        z = leaky_relu(self.enfc(z))
+        out = self.fc1(z)
+
+        return out
+
+
 def fit_gnn(model, data_loader, optimizer, loss_func):
     train_loss = 0
 
