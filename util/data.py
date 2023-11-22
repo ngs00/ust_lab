@@ -3,7 +3,7 @@ import numpy
 import itertools
 import torch
 from tqdm import tqdm
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import TensorDataset
 from rdkit import Chem
 from pymatgen.core import Structure
 from ust_lab.util.chem import get_form_vec, get_mol_graph, get_crystal_graph
@@ -44,7 +44,7 @@ def load_mat_dataset(path_metadata, path_structs, elem_attrs, idx_mat_id, idx_ta
         crystal_graph = get_crystal_graph(mat, elem_attrs, rbf_means, metadata[i][idx_target], atomic_cutoff)
 
         if crystal_graph is not None:
-          dataset.append(crystal_graph)
+            dataset.append(crystal_graph)
     
     return dataset
     
@@ -76,10 +76,3 @@ def get_tensor_dataset(dataset):
     y = torch.tensor(dataset[:, -1], dtype=torch.float).view(-1, 1)
 
     return TensorDataset(x, y)
-
-
-def get_tensor_dataset_loader(dataset, batch_size=128, shuffle=False):
-    dataset_x = torch.tensor(dataset[:, :-1], dtype=torch.float)
-    dataset_y = torch.tensor(dataset[:, -1], dtype=torch.float).view(-1, 1)
-    
-    return DataLoader(TensorDataset(dataset_x, dataset_y), batch_size=batch_size, shuffle=shuffle)
